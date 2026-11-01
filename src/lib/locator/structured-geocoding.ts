@@ -1,7 +1,7 @@
 import {LocatorError,validCoordinates,type GeocodeResult,type PointInput} from "./domain.ts";
 import {fetchGeoapify} from "./geocoding.ts";
 
-type Options={apiKey:string;fetcher?:typeof fetch};
+type Options={apiKey?:string;fetcher?:typeof fetch};
 type StructuredAddress={street:string;housenumber:string;city:string;state:string;postcode:string};
 type Candidate={lat?:number;lon?:number;country_code?:string;city?:string;state_code?:string;state?:string;county_code?:string;county?:string;postcode?:string;street?:string;housenumber?:string;formatted?:string;result_type?:string;rank?:{confidence?:number}};
 const states:Record<string,string>={AC:"Acre",AL:"Alagoas",AP:"Amapá",AM:"Amazonas",BA:"Bahia",CE:"Ceará",DF:"Distrito Federal",ES:"Espírito Santo",GO:"Goiás",MA:"Maranhão",MT:"Mato Grosso",MS:"Mato Grosso do Sul",MG:"Minas Gerais",PA:"Pará",PB:"Paraíba",PR:"Paraná",PE:"Pernambuco",PI:"Piauí",RJ:"Rio de Janeiro",RN:"Rio Grande do Norte",RS:"Rio Grande do Sul",RO:"Rondônia",RR:"Roraima",SC:"Santa Catarina",SP:"São Paulo",SE:"Sergipe",TO:"Tocantins"};
@@ -52,14 +52,15 @@ function matches(row:Candidate,address:StructuredAddress){
   typeof row.housenumber==="string"&&numberKey(row.housenumber)===address.housenumber&&
   (row.postcode===undefined||(typeof row.postcode==="string"&&row.postcode.replace(/\D/g,"")===address.postcode));
 }
-export function createStructuredGeocoder(options:Options){
+export function createStructuredGeocoder(options:Options = {}){
  return async(point:PointInput):Promise<GeocodeResult>=>{
   const address=parseStructuredAddress(point);
-  if(!options.apiKey.trim())throw new LocatorError("Configure o serviço de localização antes de consultar os endereços.",503,"GEOCODER_NOT_CONFIGURED");
+  const apiKey = (options.apiKey || process.env.GEOAPIFY_API_KEY || "").trim();
+  if(!apiKey)throw new LocatorError("Configure o serviço de localização antes de consultar os endereços.",503,"GEOCODER_NOT_CONFIGURED");
   const url=new URL("https://api.geoapify.com/v1/geocode/search");
   for(const [key,value] of Object.entries(address))url.searchParams.set(key,key==="state"?states[value]:value);
   url.searchParams.set("country","Brasil");url.searchParams.set("filter","countrycode:br");
-  url.searchParams.set("lang","pt");url.searchParams.set("format","json");url.searchParams.set("limit","3");url.searchParams.set("apiKey",options.apiKey);
+  url.searchParams.set("lang","pt");url.searchParams.set("format","json");url.searchParams.set("limit","3");url.searchParams.set("apiKey",apiKey);
   let rows:Candidate[];
   try{
    const response=await (options.fetcher??fetchGeoapify)(url,{signal:AbortSignal.timeout(8000),cache:"no-store"});
@@ -75,4 +76,4 @@ export function createStructuredGeocoder(options:Options){
   return {latitude:row.lat!,longitude:row.lon!,label:row.formatted!.slice(0,500),confidence:row.rank!.confidence!,precision:row.result_type!,source:"geoapify"};
  };
 }
-export const geocodeStructuredAddress=createStructuredGeocoder({apiKey:process.env.GEOAPIFY_API_KEY?.trim()??""});
+export const geocodeStructuredAddress=createStructuredGeocoder();
