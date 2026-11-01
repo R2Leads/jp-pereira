@@ -33,32 +33,21 @@ export function placeFromRow(row: GeoRow): GeoPlace {
 
 const resolveApiKey = (key?: string) => (key || process.env.GEOAPIFY_API_KEY || "").trim();
 
-// Tenta fetch nativo primeiro; se falhar na rede, tenta https com IPv4 como fallback.
-export async function fetchGeoapify(url: URL, {signal}: RequestInit): Promise<{ok: boolean; json(): Promise<unknown>}> {
-  try {
-    const res = await fetch(url.toString(), { signal: signal ?? undefined, cache: "no-store" });
-    return {
-      ok: res.ok,
-      json: () => res.json(),
-    };
-  } catch (nativeErr) {
-    return new Promise((resolve, reject) => {
-      const request = https.get(url, {family:4, signal:signal ?? undefined}, response => {
-        let body = "";
-        response.setEncoding("utf8");
-        response.on("data", (chunk: string) => { body += chunk; });
-        response.once("error", reject);
-        response.once("end", () => resolve({
-          ok: response.statusCode !== undefined && response.statusCode >= 200 && response.statusCode < 300,
-          json: async () => JSON.parse(body) as unknown,
-        }));
-      });
-      request.once("error", (err) => {
-        console.error("[fetchGeoapify error]", err || nativeErr);
-        reject(err);
-      });
+// Somente esta conexão usa IPv4; não altera DNS, agentes ou rede globais.
+export function fetchGeoapify(url: URL, {signal}: RequestInit): Promise<{ok: boolean; json(): Promise<unknown>}> {
+  return new Promise((resolve, reject) => {
+    const request = https.get(url, {family:4, signal:signal ?? undefined}, response => {
+      let body = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk: string) => { body += chunk; });
+      response.once("error", reject);
+      response.once("end", () => resolve({
+        ok: response.statusCode !== undefined && response.statusCode >= 200 && response.statusCode < 300,
+        json: async () => JSON.parse(body) as unknown,
+      }));
     });
-  }
+    request.once("error", reject);
+  });
 }
 
 export function createGeocoder(options: Options = {}) {

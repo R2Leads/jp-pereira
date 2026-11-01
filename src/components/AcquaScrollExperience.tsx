@@ -47,7 +47,7 @@ export default function AcquaScrollExperience() {
       <div className="acqua-story__viewport">
         {isHydrated ? (
           <video
-            poster="/images/acqua-poster-wide.jpg"
+            poster="/images/acqua-poster-definitiva.jpg"
             autoPlay={!prefersReducedMotion}
             loop
             muted
@@ -56,14 +56,13 @@ export default function AcquaScrollExperience() {
             aria-hidden="true"
             className="acqua-story__video"
           >
-            <source src="/videos/acqua-banner-loop-wide.webm" type="video/webm" />
-            <source src="/videos/acqua-banner-loop-wide.mp4" type="video/mp4" />
+            <source src="/videos/acqua-animacao-definitiva.mp4" type="video/mp4" />
           </video>
         ) : (
           <Image
-            src="/images/acqua-poster-wide.jpg"
+            src="/images/acqua-poster-definitiva.jpg"
             alt=""
-            width={1920}
+            width={1280}
             height={720}
             unoptimized
             preload
