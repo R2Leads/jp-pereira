@@ -1,0 +1,52 @@
+{
+  "name": "jp-pereira",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "start:prod": "node server.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:integration": "tsx --env-file=.env.local --test --test-concurrency=1 tests/*.integration.ts",
+    "test:live": "tsx --env-file=.env.local --test tests/*.live.ts",
+    "admin:hash": "node scripts/create-admin-credentials.mjs",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "db:export": "node scripts/export-production-data.mjs",
+    "demo:setup": "node scripts/demo-setup.mjs",
+    "db:up": "docker compose --env-file .env.local up -d --wait",
+    "db:stop": "docker compose --env-file .env.local stop",
+    "db:init": "tsx --env-file=.env.local scripts/db-init.ts",
+    "db:seed": "tsx --env-file=.env.local scripts/db-seed.ts",
+    "demo:dev": "next dev --hostname 127.0.0.1 --port 3218",
+    "demo:start": "next start --hostname 127.0.0.1 --port 3218",
+    "demo": "npm run demo:setup && npm run db:up && npm run db:init && npm run db:seed && npm run demo:dev"
+  },
+  "dependencies": {
+    "dotenv": "17.3.1",
+    "drizzle-orm": "0.45.2",
+    "exceljs": "4.4.0",
+    "iron-session": "^9.0.1",
+    "jszip": "3.10.2",
+    "next": "16.2.6",
+    "pg": "8.20.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.17",
+    "@types/node": "22.19.15",
+    "@types/pg": "8.18.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.6",
+    "postcss": "8.5.8",
+    "tailwindcss": "4.1.17",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3"
+  },
+  "type": "module"
+}

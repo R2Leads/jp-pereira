@@ -1,0 +1,20 @@
+name: jp-pereira-localizador-demo
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: jppereira_locator_demo
+      POSTGRES_USER: jp_demo
+      POSTGRES_PASSWORD: ${DEMO_DB_PASSWORD:?Execute npm run demo:setup primeiro}
+    ports:
+      - "127.0.0.1:55439:5432"
+    volumes:
+      - locator_demo_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jp_demo -d jppereira_locator_demo"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  locator_demo_data:
+
