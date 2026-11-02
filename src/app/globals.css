@@ -258,6 +258,15 @@ body {
   text-wrap: pretty;
 }
 
+@media (max-width: 767px) {
+  .acqua-story__video {
+    height: min(66.67vw, 27rem);
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: 40% center;
+  }
+}
+
 @media (min-width: 1024px) {
   .acqua-story {
     height: min(calc(100svh - 5rem), 56.25vw);
