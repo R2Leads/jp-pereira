@@ -56,7 +56,7 @@ export default function AcquaScrollExperience() {
             aria-hidden="true"
             className="acqua-story__video"
           >
-            <source src="/videos/acqua-animacao-definitiva.mp4" type="video/mp4" />
+            <source src="/videos/jp-pereira-acqua-naturabem-limao-hero.mp4" type="video/mp4" />
           </video>
         ) : (
           <Image

@@ -260,16 +260,22 @@ body {
 
 @media (min-width: 1024px) {
   .acqua-story {
-    height: max(42rem, calc(100svh - 5rem));
+    height: min(calc(100svh - 5rem), 56.25vw);
   }
 
   .acqua-story__viewport {
     height: 100%;
+    aspect-ratio: auto;
+    background: #e1f0f7;
   }
 
   .acqua-story__video {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: auto;
+    max-width: none;
+    mask-image: linear-gradient(to right, #000 68%, transparent 100%);
   }
 
   .acqua-story__video,
@@ -278,19 +284,20 @@ body {
   }
 
   .acqua-story__shade {
-    background: linear-gradient(to left, rgb(221 240 250 / 34%), transparent 50%);
+    background: none;
   }
 
   .acqua-story__benefits {
     position: absolute;
-    top: 50%;
-    right: 7%;
-    bottom: auto;
-    left: 59%;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 62%;
+    align-content: center;
     gap: clamp(1.25rem, 3vh, 2rem);
     min-height: 0;
-    padding: 0;
-    transform: translateY(-50%);
+    padding: clamp(1.5rem, 4vw, 5rem);
+    transform: none;
     background: none;
   }
 
