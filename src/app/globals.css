@@ -192,7 +192,6 @@ body {
 /* A hero de Acqua usa um loop independente da rolagem da página. */
 .acqua-story {
   position: relative;
-  --acqua-video-height: clamp(16rem, 45svh, 30rem);
   background: #cce7f5;
 }
 
@@ -206,15 +205,15 @@ body {
   position: relative;
   display: block;
   width: 100%;
-  height: var(--acqua-video-height);
+  height: auto;
+  aspect-ratio: 16 / 9;
   object-fit: contain;
   object-position: center;
 }
 
 .acqua-story__shade {
   position: absolute;
-  inset: 0 0 auto;
-  height: var(--acqua-video-height);
+  inset: 0;
   pointer-events: none;
   background: linear-gradient(to bottom, transparent 76%, rgb(204 231 245 / 58%));
 }
