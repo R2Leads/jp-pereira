@@ -263,7 +263,7 @@ body {
     height: min(66.67vw, 27rem);
     aspect-ratio: auto;
     object-fit: cover;
-    object-position: left center;
+    object-position: center;
   }
 }
 

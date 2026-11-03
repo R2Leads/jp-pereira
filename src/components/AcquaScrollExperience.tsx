@@ -47,7 +47,7 @@ export default function AcquaScrollExperience() {
       <div className="acqua-story__viewport">
         {isHydrated ? (
           <video
-            poster="/images/acqua-poster-definitiva.jpg"
+            poster="/images/acqua-naturabem-hero-poster.png"
             autoPlay={!prefersReducedMotion}
             loop
             muted
@@ -56,11 +56,11 @@ export default function AcquaScrollExperience() {
             aria-hidden="true"
             className="acqua-story__video"
           >
-            <source src="/videos/jp-pereira-acqua-naturabem-limao-hero.mp4" type="video/mp4" />
+            <source src="/videos/acqua-naturabem-hero.mp4" type="video/mp4" />
           </video>
         ) : (
           <Image
-            src="/images/acqua-poster-definitiva.jpg"
+            src="/images/acqua-naturabem-hero-poster.png"
             alt=""
             width={1280}
             height={720}
