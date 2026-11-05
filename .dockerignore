@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+tsconfig.tsbuildinfo
+*.log
+demo-server*.log
+build-validation-*
+.demo
+.env
+.env.local
+.env.producao
+.env.*.local
+credenciais-producao.txt
+*.zip
+backups

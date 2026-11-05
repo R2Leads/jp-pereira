@@ -1,0 +1,59 @@
+# Sobe o site JP Pereira completo (aplicação + banco) em qualquer servidor
+# com Docker, sem depender da Hostinger, do GitHub ou do Supabase.
+#
+# Uso:
+#   copy .env.selfhost.example .env
+#   (edite o .env: troque as senhas)
+#   docker compose -f docker-compose.selfhost.yml up --build -d
+#
+# Site em http://localhost:3000
+#
+# O banco é criado vazio na primeira subida e recebe, nesta ordem:
+#   1) migrations/0001_locator.sql
+#   2) migrations/0002_demo_contact.sql
+#   3) migrations/0003_city_listing.sql
+#   4) db/dados-producao.sql (470 pontos de venda reais)
+# Se o volume do banco for apagado (docker compose down -v), tudo é recriado.
+
+name: jp-pereira-selfhost
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: jppereira
+      POSTGRES_USER: jp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-troque-esta-senha}
+    volumes:
+      - jp_db_data:/var/lib/postgresql/data
+      - ./migrations/0001_locator.sql:/docker-entrypoint-initdb.d/01_locator.sql:ro
+      - ./migrations/0002_demo_contact.sql:/docker-entrypoint-initdb.d/02_contact.sql:ro
+      - ./migrations/0003_city_listing.sql:/docker-entrypoint-initdb.d/03_city.sql:ro
+      - ./db/dados-producao.sql:/docker-entrypoint-initdb.d/04_dados.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jp -d jppereira"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://jp:${POSTGRES_PASSWORD:-troque-esta-senha}@db:5432/jppereira
+      SESSION_SECRET: ${SESSION_SECRET:-troque-esta-chave-por-32-caracteres}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY:-}
+      DEMO_LOCAL_ONLY: "false"
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      PORT: "3000"
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+volumes:
+  jp_db_data:
