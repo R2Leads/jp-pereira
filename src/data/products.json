@@ -1222,5 +1222,25 @@
     "images": [
       "/images/products/semente-de-linhaca-marrom-200g.png"
     ]
+  },
+  {
+    "id": 2436,
+    "slug": "acqua-naturabem-limao-500ml",
+    "name": "Acqua Naturabem Limão - 500ml",
+    "categories": [
+      {
+        "slug": "bebidas",
+        "name": "Bebidas"
+      }
+    ],
+    "brand": {
+      "slug": "naturabem",
+      "name": "Naturabem"
+    },
+    "shortDescription": "<p>Refrigerante de limão sem açúcar e zero calorias, com vitaminas B3, B5, B6 e C em alto teor. Refrescante, leve e prático para qualquer hora do dia.</p>",
+    "description": "<h2>Refrigerante de limão, leve e sem açúcar</h2>\n<p>A Acqua Naturabem sabor limão é uma bebida gaseificada refrescante, feita com suco concentrado de limão e aromas naturais de citrus. Tem o frescor de um refrigerante, sem açúcar e sem calorias, em uma garrafa de 500 ml para levar para o dia a dia, o trabalho ou a refeição.</p>\n<h2>Vitaminas B3, B5, B6 e C em alto teor</h2>\n<p>Cada porção de 200 ml fornece de 50% a 60% do valor diário de quatro vitaminas:</p>\n<ul>\n<li><strong>Vitamina B3 (niacina) – 9 mg (60% VD):</strong> a vitamina B3 auxilia no metabolismo energético.</li>\n<li><strong>Vitamina B5 (ácido pantotênico) – 3 mg (60% VD):</strong> o ácido pantotênico auxilia no metabolismo energético.</li>\n<li><strong>Vitamina B6 – 0,78 mg (60% VD):</strong> a vitamina B6 auxilia no metabolismo energético e no funcionamento do sistema imune.</li>\n<li><strong>Vitamina C – 50 mg (50% VD):</strong> a vitamina C auxilia no funcionamento do sistema imune, na formação do colágeno e na absorção de ferro.</li>\n</ul>\n<h2>Sem açúcar e zero calorias</h2>\n<p>A bebida não contém açúcares e apresenta 0 kcal por porção. É adoçada com edulcorantes e tem apenas 27 mg de sódio por 200 ml, o que corresponde a 1% do valor diário.</p>\n<p><strong>Atenção:</strong> contém fenilalanina. Pessoas com fenilcetonúria (PKU) devem evitar o consumo.</p>\n<h2>Como consumir</h2>\n<p>Sirva bem gelada, pura ou com gelo e rodelas de limão. Combina com refeições, lanches e bebidas sem álcool. Depois de aberta, mantenha refrigerada.</p>\n<h2>Conservação</h2>\n<p>Armazene em local limpo, seco, arejado, ao abrigo do sol e do calor, sem odores. Não congele e evite choque físico. Após aberta, mantenha refrigerada. Validade e lote: vide embalagem.</p>\n<h2>Informação nutricional</h2>\n<p>Porção de 200 ml (1 copo). Valores diários (VD) com base em dieta de 2.000 kcal.</p>\n<ul>\n<li>Valor energético: 0 kcal</li>\n<li>Carboidratos: 0 g — açúcares totais 0 g e açúcares adicionados 0 g</li>\n<li>Proteínas: 0 g</li>\n<li>Gorduras totais: 0 g</li>\n<li>Fibras alimentares: 0 g</li>\n<li>Sódio: 27 mg (1% VD)</li>\n<li>Vitamina C: 50 mg (50% VD)</li>\n<li>Niacina (B3): 9 mg (60% VD)</li>\n<li>Ácido pantotênico (B5): 3 mg (60% VD)</li>\n<li>Vitamina B6: 0,78 mg (60% VD)</li>\n</ul>\n<h2>Ingredientes</h2>\n<p>Água gaseificada, suco concentrado de limão, aroma idêntico ao natural de limão, aroma natural de citrus, acidulante ácido cítrico (INS 330), conservadores benzoato de sódio (INS 211) e sorbato de potássio (INS 202), antioxidante ácido ascórbico (INS 300), regulador de acidez citrato de sódio (INS 331iii), edulcorantes acessulfame de potássio (INS 950), aspartame (INS 951) e sucralose (INS 955), espessante, EDTA cálcio dissódico (INS 385) e vitaminas B3, B5, B6 e C.</p>\n<p><strong>Não contém glúten. Contém fenilalanina. Não fermentado. Não alcoólico.</strong></p>\n<p>Fabricado por Futura Produtos Alimentícios Ltda — Av. Cel. Nogueira Padilha, 2628, Sorocaba/SP — CNPJ 37.008.355/0001-37. Distribuído por JP Pereira Ltda — Rua Ofélia Santuci Romanó, 23, Chácaras Reunidas São Jorge, Sorocaba/SP — CEP 18052-496 — CNPJ 00.731.122/0001-58.</p>",
+    "images": [
+      "/images/products/acqua-naturabem-limao-500ml.png"
+    ]
   }
 ]

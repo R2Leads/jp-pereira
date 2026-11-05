@@ -55,6 +55,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   acessorios: "🪵",
   suplementos: "💊",
   farinha: "🥖",
+  bebidas: "🥤",
 };
 
 export type CategorySummary = Category & { count: number; icon: string };

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { contactMessages } from "@/db/schema";
 import { takeRateLimit } from "@/lib/locator/security";
+import { sendContactEmail } from "@/lib/mail";
 
 function clientKey(request: Request) {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -30,11 +31,19 @@ export async function POST(request: Request) {
   const company = String(body.company ?? "").trim();
   const message = String(body.message ?? "").trim();
   const origin = body.origin === "revenda" ? "revenda" : "contato";
+  const consent =
+    body.consent === true || body.consent === "true" || body.consent === "on";
 
   if (!name || !email || !message) {
     return NextResponse.json(
       { error: "Preencha nome, e-mail e mensagem." },
       { status: 400 }
+    );
+  }
+  if (!consent) {
+    return NextResponse.json(
+      { error: "É necessário aceitar o uso dos dados para enviar a mensagem." },
+      { status: 400, headers: { "Cache-Control": "no-store" } }
     );
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -57,5 +66,17 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  const notified = await sendContactEmail({
+    origin,
+    name,
+    email,
+    phone,
+    company,
+    message,
+  });
+
+  return NextResponse.json(
+    { ok: true, notified: notified === "sent" },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

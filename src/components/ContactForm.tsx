@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { whatsappLink } from "@/lib/whatsapp";
 
 type Props = {
   origin: "contato" | "revenda";
@@ -8,49 +9,62 @@ type Props = {
 };
 
 export default function ContactForm({ origin, showCompany = false }: Props) {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [status, setStatus] = useState<"idle" | "sent">("idle");
+  const [waUrl, setWaUrl] = useState("");
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
-    setStatus("sending");
-    setErrorMsg("");
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, origin }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setStatus("error");
-        setErrorMsg(json.error ?? "Não foi possível enviar. Tente novamente.");
-        return;
-      }
-      setStatus("sent");
-      form.reset();
-    } catch {
-      setStatus("error");
-      setErrorMsg("Não foi possível enviar. Verifique sua conexão e tente novamente.");
-    }
+    const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
+
+    const lines = [
+      "Ola! Enviei uma mensagem pelo site da JP Pereira.",
+      "",
+      `Nome: ${data.name ?? ""}`,
+      `E-mail: ${data.email ?? ""}`,
+    ];
+    if (data.phone?.trim()) lines.push(`Telefone: ${data.phone}`);
+    if (data.company?.trim()) lines.push(`Empresa: ${data.company}`);
+    lines.push("", data.message ?? "");
+
+    const url = whatsappLink(lines.join("\n"));
+    setWaUrl(url);
+    window.open(url, "_blank", "noopener,noreferrer");
+    form.reset();
+    setStatus("sent");
+
+    void fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, origin }),
+    }).catch(() => undefined);
   }
 
   if (status === "sent") {
     return (
       <div className="rounded-3xl border border-green-200 bg-green-50 p-8 text-center">
         <p className="text-4xl" aria-hidden>✅</p>
-        <h3 className="mt-3 text-lg font-bold text-green-900">Mensagem enviada!</h3>
+        <h3 className="mt-3 text-lg font-bold text-green-900">Quase tudo pronto!</h3>
         <p className="mt-1 text-sm text-green-800">
-          Recebemos seu contato e retornaremos em breve.
+          Abrimos o WhatsApp com sua mensagem já preenchida. Toque em <strong>enviar</strong> na
+          conversa para falar com a gente.
         </p>
+        <div>
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex rounded-full bg-jp-red-500 px-8 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-jp-red-600"
+          >
+            Abrir o WhatsApp
+          </a>
+        </div>
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="mt-5 text-sm font-semibold text-green-900 underline underline-offset-4"
+          className="mt-4 text-sm font-semibold text-green-900 underline underline-offset-4"
         >
-          Enviar outra mensagem
+          Preencher outra mensagem
         </button>
       </div>
     );
@@ -106,19 +120,30 @@ export default function ContactForm({ origin, showCompany = false }: Props) {
         />
       </div>
 
-      {status === "error" && (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">
-          {errorMsg}
-        </p>
-      )}
+      <div className="flex items-start gap-3 rounded-xl border border-jp-blue-100 bg-jp-blue-50 p-4">
+        <input
+          id={`${origin}-consent`}
+          name="consent"
+          type="checkbox"
+          required
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-jp-blue-300 accent-jp-red-500"
+        />
+        <label htmlFor={`${origin}-consent`} className="text-xs leading-relaxed text-jp-blue-800">
+          Autorizo a JP Pereira a guardar e usar os dados informados neste formulário
+          exclusivamente para responder a este contato. *
+        </label>
+      </div>
 
       <button
         type="submit"
-        disabled={status === "sending"}
-        className="w-full rounded-full bg-jp-red-500 px-8 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-jp-red-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="w-full rounded-full bg-jp-red-500 px-8 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-jp-red-600 sm:w-auto"
       >
-        {status === "sending" ? "Enviando…" : "Enviar mensagem"}
+        Enviar mensagem
       </button>
+      <p className="text-xs leading-relaxed text-jp-blue-600">
+        Ao enviar, abriremos o WhatsApp da JP Pereira com sua mensagem pronta — basta tocar em
+        enviar na conversa.
+      </p>
     </form>
   );
 }

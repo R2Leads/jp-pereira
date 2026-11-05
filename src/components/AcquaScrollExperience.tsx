@@ -12,8 +12,8 @@ const VITAMINS = [
     benefit: "Auxilia no metabolismo energético e no funcionamento do sistema imune.",
   },
   {
-    name: "Vitamina B9",
-    benefit: "Auxilia no funcionamento do sistema imune e no processo de divisão celular.",
+    name: "Vitamina B3",
+    benefit: "Auxilia no metabolismo energético.",
   },
   {
     name: "Vitamina C",
