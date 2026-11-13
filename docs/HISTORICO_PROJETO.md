@@ -1,5 +1,5 @@
 # Histórico Atualizado do Projeto — JP Pereira (Distribuindo Saúde)
-**Data da última atualização:** 01/11/2026  
+**Data da última atualização:** 12/11/2026  
 **Domínio Oficial:** [https://jppereira.com.br](https://jppereira.com.br)  
 **Repositório GitHub:** `https://github.com/R2Leads/jp-pereira` (Branch: `main`)  
 **Ambiente de Produção:** Hostinger Cloud (Web App Node.js) + Cloudflare DNS + Supabase PostgreSQL (AWS São Paulo)
@@ -8,12 +8,13 @@
 
 ## 1. Visão Geral do Estado Atual
 
-O projeto superou a fase de homologação e os bloqueios de infraestrutura anteriores (na TurboCloud/cPanel) e **já está 100% publicado e operacional no domínio principal `https://jppereira.com.br`**.
+O projeto superou a fase de homologação e os bloqueios de infraestrutura anteriores (na TurboCloud/cPanel) e **está 100% publicado e operacional no domínio principal `https://jppereira.com.br`**.
 
 ### Principais Indicadores do Estado Atual:
 - **Site Institucional:** No ar com catálogo completo das marcas (JPPereira, Naturabem, D'Laiz), receitas, blog e institucional.
-- **Localizador de Lojas (`/onde-comprar`):** Operacional com base real de 469 parceiros/pontos de venda, busca por CEP, autocomplete de endereços e expansão inteligente de raio (30/50/100 km).
-- **Banco de Dados:** Conexão direta e segura com PostgreSQL no Supabase (`sa-east-1` São Paulo).
+- **Localizador de Lojas (`/onde-comprar`):** 100% operacional com base real de 470 parceiros/pontos de venda, busca por CEP, autocomplete de endereços via Geoapify e expansão dinâmica de raio.
+- **Banco de Dados:** Conexão direta e segura com PostgreSQL no Supabase (`sa-east-1` São Paulo), reativada com sucesso após pausa de inatividade do Free Tier.
+- **Keep-Alive Automatizado:** Workflow do GitHub Actions (`.github/workflows/supabase-keepalive.yml`) agendado para consultar `/api/health` 2x ao dia, prevenindo futuras hibernações por inatividade.
 - **DNS e E-mails Corporativos:** Transição concluída com **zero downtime**. Todas as contas de e-mail corporativo da empresa foram preservadas intactas na TurboCloud através de apontamento seletivo de registro Tipo A no Cloudflare.
 - **Segurança:** Next.js atualizado para a versão **16.4.3**, eliminando 38 alertas de vulnerabilidade apontados pelo scanner da Hostinger.
 - **Hero / Animação Principal:** Atualizado com a **nova animação definitiva** da Acqua Naturabem (resolução corrigida sem distorção na garrafa).
@@ -53,15 +54,25 @@ O projeto superou a fase de homologação e os bloqueios de infraestrutura anter
 
 ### Fase C — Melhorias Visuais e de Conteúdo (01/11/2026)
 1. **Troca da Animação Principal (Hero da Home):**  
-   - Substituído o vídeo anterior (que apresentava leve distorção na proporção da garrafa de água Acqua Naturabem) pelo novo arquivo enviado pelo usuário (`Animação definitiva.mp4`).
-   - Gerado o novo arquivo de alta fidelidade: `public/videos/acqua-animacao-definitiva.mp4` (1280x720, 4,4 MB, H.264).
-   - Extraído poster estático em alta definição: `public/images/acqua-poster-definitiva.jpg` para carregamento imediato.
-   - Ajustado componente `AcquaScrollExperience.tsx` com alinhamento à esquerda, garantindo nitidez e enquadramento ideal da garrafa em celulares, tablets e desktops ultrawide.
-   - Validação em produção: URL pública respondendo com status HTTP `200 OK`.
-
+   - Substituído o vídeo anterior pela versão definitiva (`acqua-animacao-definitiva.mp4` + pôster em alta resolução).
+   - Componente `AcquaScrollExperience.tsx` ajustado com proporção e enquadramento ideal.
 2. **Formulários de Captação (`/revenda` e `/contato`):**  
-   - Formulários testados em produção: gravando leads com sucesso na tabela `contact_messages` do Supabase.
-   - Definida a arquitetura de envio de e-mails transacionais via **API do Resend** com o domínio `@jppereira.com.br`.
+   - Formulários testados em produção gravando leads com sucesso na tabela `contact_messages`.
+
+---
+
+### Fase D — Diagnóstico, Reativação Supabase e Automação Keep-Alive (12/11/2026)
+1. **Diagnóstico da Falha do Localizador:**
+   - Identificada a causa raiz da indisponibilidade do `/onde-comprar` e do `/api/health`: pausa automática do projeto Supabase `zhytfaocggjxnswnpzvd` por inatividade de 7 dias no plano Free Tier.
+   - Pooler Supavisor retornava `(ENOTFOUND) tenant/user not found` e hostnames DNS estavam inativos.
+2. **Reativação do Projeto Supabase:**
+   - Projeto reativado com restauração integral de 470 registros na tabela `locator_points` (367 ativos/confirmados, 469 visíveis por cidade, 1 na lixeira).
+3. **Validação em Produção (100% Operacional):**
+   - `/api/health` respondendo HTTP `200 OK` `{"ok":true}` com tempo de resposta de 219 ms.
+   - `/api/points/search` validado com CEP `18010-000` (Sorocaba Centro): retorno de 122 pontos no raio de 30 km, ordenados com precisão por proximidade geográfica.
+   - `/api/points/autocomplete` validado com resposta rápida do Geoapify (200 OK).
+4. **Implantação de Keep-Alive Preventivo:**
+   - Criado workflow no GitHub Actions (`.github/workflows/supabase-keepalive.yml`) com execução agendada 2 vezes ao dia (06:00 e 18:00 UTC) consultando `/api/health`, mantendo o PostgreSQL aquecido e prevenindo pausas automáticas futuras sem custos adicionais.
 
 ---
 

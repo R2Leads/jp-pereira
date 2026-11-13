@@ -1,0 +1,36 @@
+name: Supabase Database Keep-Alive
+
+on:
+  schedule:
+    # Executa duas vezes ao dia (06:00 e 18:00 UTC) para garantir atividade contínua no Supabase Free Tier
+    - cron: '0 6,18 * * *'
+  workflow_dispatch: # Permite disparo manual pelo painel do GitHub Actions
+
+jobs:
+  keepalive:
+    name: Ping Health Check & Keep-Alive Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Executar consulta de saúde em produção
+        run: |
+          echo "Disparando ping de keep-alive em https://jppereira.com.br/api/health..."
+          RESPONSE=$(curl -sS --max-time 15 -w "\nHTTP_STATUS:%{http_code}\nTIME_TOTAL:%{time_total}s" "https://jppereira.com.br/api/health")
+          
+          echo "$RESPONSE"
+          
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | sed -n '1p')
+          
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "❌ ERRO: Health check falhou com status HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          
+          if [[ "$BODY" != *"\"ok\":true"* ]]; then
+            echo "❌ ERRO: Resposta inesperada: $BODY"
+            exit 1
+          fi
+          
+          echo "✅ SUCESSO: Conexão com Supabase PostgreSQL validada com status $HTTP_STATUS!"

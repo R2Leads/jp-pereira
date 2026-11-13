@@ -1,12 +1,62 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { contactMessages } from "@/db/schema";
 import { takeRateLimit } from "@/lib/locator/security";
 import { sendContactEmail } from "@/lib/mail";
 
+async function persistMessage(data: {
+  origin: "contato" | "revenda";
+  name: string;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  message: string;
+}) {
+  try {
+    const { db } = await import("@/db");
+    const { contactMessages } = await import("@/db/schema");
+    await db.insert(contactMessages).values({
+      origin: data.origin,
+      name: data.name.slice(0, 160),
+      email: data.email.slice(0, 160),
+      phone: data.phone ? data.phone.slice(0, 40) : null,
+      company: data.company ? data.company.slice(0, 160) : null,
+      message: data.message.slice(0, 5000),
+    });
+  } catch (error) {
+    console.error(
+      "[contact:db] Falha secundária ao persistir mensagem no banco:",
+      error instanceof Error ? error.message : "Erro desconhecido"
+    );
+  }
+}
+
+const recentDispatches = new Map<string, number>();
+
+function getDedupKey(origin: string, email: string, message: string): string {
+  return `${origin}:${email.toLowerCase().trim()}:${message.trim().slice(0, 120)}`;
+}
+
+function isRecentDuplicate(key: string, now = Date.now()): boolean {
+  if (recentDispatches.size > 500) {
+    for (const [k, exp] of recentDispatches) {
+      if (exp <= now) recentDispatches.delete(k);
+    }
+  }
+  const exp = recentDispatches.get(key);
+  return Boolean(exp && exp > now);
+}
+
+function markDispatched(key: string, windowMs = 30_000, now = Date.now()): void {
+  recentDispatches.set(key, now + windowMs);
+}
+
 function clientKey(request: Request) {
+  // Em ambientes com Cloudflare Edge, cf-connecting-ip é injetado confiavelmente pela borda
+  const cfConnectingIp = request.headers.get("cf-connecting-ip")?.trim();
+  if (cfConnectingIp) {
+    return `contact:${cfConnectingIp}`;
+  }
   const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "desconhecido";
+  const ip = forwarded?.split(",")[0]?.trim() || request.headers.get("x-real-ip")?.trim() || "desconhecido";
   return `contact:${ip}`;
 }
 
@@ -50,23 +100,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Informe um e-mail válido." }, { status: 400 });
   }
 
-  try {
-    await db.insert(contactMessages).values({
-      origin,
-      name: name.slice(0, 160),
-      email: email.slice(0, 160),
-      phone: phone ? phone.slice(0, 40) : null,
-      company: company ? company.slice(0, 160) : null,
-      message: message.slice(0, 5000),
-    });
-  } catch {
+  const dedupKey = getDedupKey(origin, email, message);
+  if (isRecentDuplicate(dedupKey)) {
     return NextResponse.json(
-      { error: "Não foi possível enviar agora. Tente novamente em instantes." },
-      { status: 503, headers: { "Cache-Control": "no-store" } }
+      { ok: true, notified: true, deduplicated: true },
+      { headers: { "Cache-Control": "no-store" } }
     );
   }
 
-  const notified = await sendContactEmail({
+  await persistMessage({
     origin,
     name,
     email,
@@ -75,8 +117,28 @@ export async function POST(request: Request) {
     message,
   });
 
+  const sendResult = await sendContactEmail({
+    origin,
+    name,
+    email,
+    phone,
+    company,
+    message,
+  });
+
+  if (sendResult === "failed") {
+    return NextResponse.json(
+      { error: "Não foi possível enviar sua notificação no momento. Por favor, tente novamente em instantes ou utilize nosso atendimento direto pelo WhatsApp." },
+      { status: 502, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  if (sendResult === "sent") {
+    markDispatched(dedupKey);
+  }
+
   return NextResponse.json(
-    { ok: true, notified: notified === "sent" },
+    { ok: true, notified: sendResult === "sent" },
     { headers: { "Cache-Control": "no-store" } }
   );
 }
