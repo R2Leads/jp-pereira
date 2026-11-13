@@ -2,7 +2,7 @@ name: Supabase Database Keep-Alive
 
 on:
   schedule:
-    # Proposta ainda não publicada; o workflow remoto segue em 0 6,18 * * *.
+    # O workflow publicado e o monitor Cronitor usam o mesmo cron em UTC.
     - cron: '17 6,18 * * *'
   workflow_dispatch:
 
