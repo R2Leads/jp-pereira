@@ -2,35 +2,116 @@ name: Supabase Database Keep-Alive
 
 on:
   schedule:
-    # Executa duas vezes ao dia (06:00 e 18:00 UTC) para garantir atividade contínua no Supabase Free Tier
-    - cron: '0 6,18 * * *'
-  workflow_dispatch: # Permite disparo manual pelo painel do GitHub Actions
+    # Proposta ainda não publicada; o workflow remoto segue em 0 6,18 * * *.
+    - cron: '17 6,18 * * *'
+  workflow_dispatch:
+
+permissions: {}
 
 jobs:
   keepalive:
-    name: Ping Health Check & Keep-Alive Supabase
+    name: Consultar PostgreSQL e reportar execução ao Cronitor
     runs-on: ubuntu-latest
     timeout-minutes: 5
-
     steps:
-      - name: Executar consulta de saúde em produção
+      - name: Consultar endpoint e reportar ciclo ao Cronitor
+        env:
+          CRONITOR_TELEMETRY_URL: ${{ secrets.CRONITOR_TELEMETRY_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
         run: |
-          echo "Disparando ping de keep-alive em https://jppereira.com.br/api/health..."
-          RESPONSE=$(curl -sS --max-time 15 -w "\nHTTP_STATUS:%{http_code}\nTIME_TOTAL:%{time_total}s" "https://jppereira.com.br/api/health")
-          
-          echo "$RESPONSE"
-          
-          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
-          BODY=$(echo "$RESPONSE" | sed -n '1p')
-          
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "❌ ERRO: Health check falhou com status HTTP $HTTP_STATUS"
+          set -uo pipefail
+
+          scheduled=false
+          start_ok=true
+          health_ok=false
+          terminal_sent=false
+          body=''
+
+          send_event() {
+            local state="$1"
+            local base status
+            if [ -z "${CRONITOR_TELEMETRY_URL:-}" ]; then
+              return 1
+            fi
+            base="${CRONITOR_TELEMETRY_URL%/}"
+            status="$(curl --silent --fail --connect-timeout 5 --max-time 10 \
+              --retry 2 --retry-delay 2 --output /dev/null --write-out '%{http_code}' \
+              "${base}?state=${state}" 2>/dev/null)" || return 1
+            [ "$status" = 200 ]
+          }
+
+          on_exit() {
+            local result=$?
+            trap - EXIT
+            if [ "$scheduled" = true ] && [ "$terminal_sent" != true ]; then
+              if send_event fail; then
+                echo 'Cronitor: sinal de falha de contingência enviado.'
+              else
+                echo '::error::Cronitor: sinal de falha de contingência não confirmado; a ausência de conclusão deve gerar alerta.'
+              fi
+            fi
+            if [ -n "$body" ]; then
+              rm -f "$body"
+            fi
+            exit "$result"
+          }
+
+          if [ "$EVENT_NAME" = schedule ]; then
+            scheduled=true
+            trap on_exit EXIT
+            if send_event run; then
+              echo 'Cronitor: início da execução registrado.'
+            else
+              echo '::error::Cronitor: não foi possível registrar o início; a consulta ao banco continuará.'
+              start_ok=false
+            fi
+          fi
+
+          if ! body="$(mktemp)"; then
+            echo '::error::Não foi possível criar arquivo temporário para a resposta.'
             exit 1
           fi
-          
-          if [[ "$BODY" != *"\"ok\":true"* ]]; then
-            echo "❌ ERRO: Resposta inesperada: $BODY"
-            exit 1
+
+          status=000
+          request_ok=false
+          status="$(curl --silent --show-error --fail --connect-timeout 5 --max-time 15 \
+            --retry 2 --retry-delay 5 --output "$body" --write-out '%{http_code}' \
+            'https://jppereira.com.br/api/health')" && request_ok=true || request_ok=false
+
+          if [ "$request_ok" = true ] && [ "$status" = 200 ] && \
+            python3 -c '
+          import json, sys
+          with open(sys.argv[1], encoding="utf-8") as response:
+              payload = json.load(response)
+          sys.exit(0 if isinstance(payload, dict) and payload.get("ok") is True else 1)
+          ' "$body" 2>/dev/null; then
+            health_ok=true
+            echo 'Endpoint: HTTP 200 e JSON com ok=true validados.'
+          else
+            echo "::error::Endpoint/PostgreSQL: falha de transporte, HTTP ou JSON (HTTP ${status:-000})."
           fi
-          
-          echo "✅ SUCESSO: Conexão com Supabase PostgreSQL validada com status $HTTP_STATUS!"
+
+          if [ "$scheduled" = true ]; then
+            if [ "$health_ok" = true ] && [ "$start_ok" = true ]; then
+              if send_event complete; then
+                terminal_sent=true
+                echo 'Cronitor: conclusão bem-sucedida registrada.'
+              else
+                echo '::error::Cronitor: não foi possível registrar a conclusão; será tentado o sinal fail.'
+                exit 1
+              fi
+            else
+              if send_event fail; then
+                terminal_sent=true
+                echo 'Cronitor: falha registrada.'
+              else
+                echo '::error::Cronitor: não foi possível registrar a falha; a ausência de conclusão deve gerar alerta.'
+              fi
+              exit 1
+            fi
+          else
+            echo 'Execução manual: o monitor de produção não recebe sinais.'
+          fi
+
+          [ "$health_ok" = true ] && [ "$start_ok" = true ]
